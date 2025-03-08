@@ -29,16 +29,50 @@ export default function Controls() {
     }
   }, [playerQueueLength, isPlaying]);
 
+  // ✅ Request microphone permission + connect
   const handleStart = async () => {
     setIsStarted(true);
     try {
+      // ✅ Request permission explicitly before using getUserMedia
+      const permissionStatus = await navigator.permissions.query({ name: "microphone" as any });
+  
+      if (permissionStatus.state === "denied") {
+        alert("Microphone access is denied. Please enable it in browser settings.");
+        setIsStarted(false);
+        return;
+      }
+  
+      if (permissionStatus.state === "prompt") {
+        console.log("Requesting microphone permission...");
+      }
+  
+      const getUserMedia =
+        navigator.mediaDevices?.getUserMedia ||
+        (navigator as any).webkitGetUserMedia ||
+        (navigator as any).mozGetUserMedia ||
+        (navigator as any).msGetUserMedia;
+  
+      if (!getUserMedia) {
+        alert("getUserMedia is not supported on this browser.");
+        setIsStarted(false);
+        return;
+      }
+  
+      // ✅ If permission granted, open mic stream
+      const stream = await getUserMedia.call(navigator, { audio: true });
+      stream.getTracks().forEach((track) => track.stop()); // Stop stream after permission check
+  
       await connect();
-      lottieRef.current?.pause(); // ✅ Pause animation after "Start"
-    } catch (error) {
+      lottieRef.current?.pause(); // ✅ Pause animation after connecting
+    } catch (error:any) {
       console.error("Connection failed:", error);
+      alert(`Microphone access error: ${error.message}`);
+      setIsStarted(false);
     }
   };
+  
 
+  // ✅ End session and stop animation
   const handleEnd = () => {
     disconnect();
     setIsStarted(false);
@@ -62,6 +96,8 @@ export default function Controls() {
             animationData={loadingAnimation}
             lottieRef={lottieRef}
             loop
+            autoPlay // ✅ Attempt autoplay
+            playsInline // ✅ Allow playback in mobile browsers
             className="w-36 h-36"
           />
           <button
