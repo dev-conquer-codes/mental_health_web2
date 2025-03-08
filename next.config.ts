@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    HUME_API_KEY: process.env.HUME_API_KEY,
+    HUME_SECRET_KEY: process.env.HUME_SECRET_KEY,
+  },
 };
 
 export default nextConfig;
