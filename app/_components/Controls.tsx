@@ -1,8 +1,9 @@
 "use client";
-import { useVoice, VoiceReadyState } from "@humeai/voice-react";
+import { useVoice } from "@humeai/voice-react";
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { LottieRefCurrentProps } from "lottie-react";
+
 // ✅ Dynamically import Lottie to prevent SSR issues
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -10,19 +11,18 @@ const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 import loadingAnimation from "@/public/Animation.json";
 
 export default function Controls() {
-  const { connect, disconnect, readyState, isPlaying, playerQueueLength } = useVoice();
+  const { connect, disconnect, isPlaying, playerQueueLength } = useVoice();
   const [isStarted, setIsStarted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // ✅ Create a reference for the Lottie animation
-  const lottieRef = useRef<LottieRefCurrentProps>(null);
-
+  // ✅ Correct Type for useRef
+  const lottieRef = useRef<LottieRefCurrentProps | null>(null);
 
   // ✅ Track AI speech using `playerQueueLength`
   useEffect(() => {
     if (playerQueueLength > 0 || isPlaying) {
       setIsSpeaking(true);
-      lottieRef.current?.play(); // ✅ Play animation only when AI is responding
+      lottieRef.current?.play(); // ✅ Play animation when AI is responding
     } else {
       setIsSpeaking(false);
       lottieRef.current?.pause(); // ✅ Pause animation when AI stops
@@ -33,7 +33,7 @@ export default function Controls() {
     setIsStarted(true);
     try {
       await connect();
-      lottieRef.current?.pause(); // ✅ Pause animation immediately after "Start" is clicked
+      lottieRef.current?.pause(); // ✅ Pause animation after "Start"
     } catch (error) {
       console.error("Connection failed:", error);
     }
@@ -57,7 +57,7 @@ export default function Controls() {
         </button>
       ) : (
         <div className="flex flex-col items-center">
-          {/* ✅ Lottie animation is visible but stays paused initially */}
+          {/* ✅ Correctly pass lottieRef */}
           <Lottie
             animationData={loadingAnimation}
             lottieRef={lottieRef}
